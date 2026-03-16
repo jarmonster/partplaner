@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – PartPlaner</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <span class="nav__logo">PartPlaner</span>
+    <div class="nav__tabs">
+      <button class="nav__tab active" data-tab="parties">Parties</button>
+      <button class="nav__tab" data-tab="calculator">Calculator</button>
+    </div>
+    <button id="logout-btn" class="btn btn-ghost btn-sm">Log out</button>
+  </nav>
+
+  <!-- ===================== PARTIES TAB ===================== -->
+  <div id="tab-parties" class="container">
+    <div class="page-header flex justify-between items-center">
+      <div>
+        <h1 class="page-header__title">Parties</h1>
+        <p class="page-header__sub">Manage your events and shift registration</p>
+      </div>
+      <button id="new-party-btn" class="btn btn-primary">+ New Party</button>
+    </div>
+
+    <!-- New party form (hidden by default) -->
+    <div id="new-party-form" class="card" style="display:none; margin-bottom:2.4rem; max-width:48rem;">
+      <h2 style="font-size:1.8rem; margin-bottom:2rem;">Create party</h2>
+      <div class="flex flex-col gap-16">
+        <div class="form-group">
+          <label class="label" for="party-name">Party name</label>
+          <input id="party-name" class="input" type="text" placeholder="Summer Bash" />
+        </div>
+        <div class="form-group">
+          <label class="label" for="party-date">Date</label>
+          <input id="party-date" class="input" type="date" />
+        </div>
+        <div class="flex gap-12">
+          <button id="save-party-btn" class="btn btn-primary">Save</button>
+          <button id="cancel-party-btn" class="btn btn-ghost">Cancel</button>
+        </div>
+        <p id="party-form-error" style="display:none; color:var(--danger); font-size:1.3rem;"></p>
+      </div>
+    </div>
+
+    <!-- Party list -->
+    <div id="parties-list" class="flex flex-col gap-16" style="padding-bottom: 4rem;">
+      <div class="empty-state" id="parties-empty" style="display:none;">
+        No parties yet. Create one above.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CALCULATOR TAB ===================== -->
+  <div id="tab-calculator" class="container" style="display:none;">
+    <div class="page-header">
+      <h1 class="page-header__title">Revenue Calculator</h1>
+      <p class="page-header__sub">Estimate drink card revenue and profit</p>
+    </div>
+
+    <div class="flex flex-col gap-24" style="max-width:80rem; padding-bottom:4rem;">
+
+      <!-- INPUTS -->
+      <div class="card">
+        <p class="section__title" style="margin-bottom:2rem;">Inventory & Costs</p>
+        <div class="calc-grid">
+          <div class="form-group">
+            <label class="label" for="c-beer">Liters of beer</label>
+            <input id="c-beer" class="input" type="number" min="0" step="0.1" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label class="label" for="c-alcohol">Liters of pure alcohol</label>
+            <input id="c-alcohol" class="input" type="number" min="0" step="0.1" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label class="label" for="c-soda">Liters of soda</label>
+            <input id="c-soda" class="input" type="number" min="0" step="0.1" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label class="label" for="c-cost">Total cost (€)</label>
+            <input id="c-cost" class="input" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <button id="calc-btn" class="btn btn-primary" style="margin-top:2rem;">Calculate</button>
+      </div>
+
+      <!-- RESULTS (hidden until calculated) -->
+      <div id="calc-results" style="display:none;" class="flex flex-col gap-24">
+
+        <!-- Cards available -->
+        <div class="card">
+          <p class="section__title">Cards Available</p>
+          <div class="calc-grid">
+            <div class="calc-result">
+              <div class="calc-result__label">Beer cards</div>
+              <div class="calc-result__value" id="r-beer-cards">—</div>
+            </div>
+            <div class="calc-result">
+              <div class="calc-result__label">Cocktail cards</div>
+              <div class="calc-result__value" id="r-cocktail-cards">—</div>
+            </div>
+            <div class="calc-result" style="grid-column: 1 / -1;">
+              <div class="calc-result__label">Total cards</div>
+              <div class="calc-result__value" id="r-total-cards">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="card">
+          <p class="section__title">Potential Revenue (all cards sold)</p>
+          <div class="calc-grid">
+            <div class="calc-result">
+              <div class="calc-result__label">Conservative (5 €/card)</div>
+              <div class="calc-result__value" id="r-rev-min">—</div>
+            </div>
+            <div class="calc-result">
+              <div class="calc-result__label">Optimistic (6 €/card)</div>
+              <div class="calc-result__value" id="r-rev-max">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profit -->
+        <div class="card">
+          <p class="section__title">Estimated Profit (after costs)</p>
+          <div class="calc-grid">
+            <div class="calc-result">
+              <div class="calc-result__label">Conservative</div>
+              <div class="calc-result__value" id="r-profit-min">—</div>
+            </div>
+            <div class="calc-result">
+              <div class="calc-result__label">Optimistic</div>
+              <div class="calc-result__value" id="r-profit-max">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown note -->
+        <div class="card" id="r-breakdown" style="font-size:1.4rem; color:var(--gray300); line-height:1.8;"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHIFT MODAL ===================== -->
+  <div id="shift-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="shift-modal-title">Shifts</h2>
+        <button id="shift-modal-close" class="btn btn-ghost btn-sm">✕ Close</button>
+      </div>
+      <div id="shift-modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+  <script type="module" src="js/calculator.js"></script>
+
+</body>
+</html>
