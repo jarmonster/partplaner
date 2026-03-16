@@ -28,12 +28,12 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
-  authDomain:        "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket:     "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId:             "REPLACE_WITH_YOUR_APP_ID",
+  apiKey:            "AIzaSyDRI878jot-areXl-U3seV274NmFjnet4o",
+  authDomain:        "partplaner.firebaseapp.com",
+  projectId:         "partplaner",
+  storageBucket:     "partplaner.firebasestorage.app",
+  messagingSenderId: "381916728719",
+  appId:             "1:381916728719:web:6c11bb90d18269476b4ffa",
 };
 
 const app = initializeApp(firebaseConfig);
