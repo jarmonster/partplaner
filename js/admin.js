@@ -219,7 +219,7 @@ function renderShiftGrid(party, shifts) {
 
     <!-- Shift grid -->
     <div class="shift-scroll-wrapper">
-      <div class="shift-grid">
+      <div class="shift-grid shift-grid--admin">
         <div class="shift-grid__header">Time</div>
         <div class="shift-grid__header">Bar</div>
         <div class="shift-grid__header">Shot Shift</div>

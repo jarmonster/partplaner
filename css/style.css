@@ -302,6 +302,11 @@ input, select, textarea {
 .shift-grid {
   display: grid;
   grid-template-columns: 8rem 1fr 1fr;
+}
+
+/* Admin variant: wider time column to fit the remove-slot button */
+.shift-grid--admin {
+  grid-template-columns: 12rem 1fr 1fr;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
