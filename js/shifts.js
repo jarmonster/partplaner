@@ -1,4 +1,4 @@
-import { getActiveParty, onShifts, claimShift, TIMES } from './firebase.js';
+import { getActiveParty, onShifts, claimShift, sortTimes } from './firebase.js';
 
 // ── Auth / session ────────────────────────────────────────
 const userName = sessionStorage.getItem('pp_name');
@@ -18,7 +18,6 @@ const bannerEl  = document.getElementById('reg-closed-banner');
 const container = document.getElementById('shift-container');
 
 let currentParty     = null;
-let unsubShifts      = null;
 let registrationOpen = false;
 
 async function init() {
@@ -42,24 +41,18 @@ async function init() {
 
     bannerEl.style.display = registrationOpen ? 'none' : '';
 
-    // Subscribe to real-time shift updates
-    unsubShifts = onShifts(party.id, shifts => {
-      registrationOpen = currentParty.registrationOpen;
-      renderGrid(shifts);
+    // Real-time shift updates
+    onShifts(party.id, shifts => {
+      renderGrid(party, shifts);
     });
 
-    // Also watch the party doc itself for registration toggle changes
-    // (onShifts doesn't cover party-level changes — use a lightweight poll via re-init)
-    // For simplicity, we re-fetch the party every 15s to catch toggle changes.
+    // Poll party doc every 15s to catch registration toggle changes
     setInterval(async () => {
       const updated = await getActiveParty();
       if (!updated) return;
       currentParty     = updated;
       registrationOpen = updated.registrationOpen;
       bannerEl.style.display = registrationOpen ? 'none' : '';
-      // Grid re-renders on next shift snapshot, or force re-render:
-      const lastShifts = window._lastShifts;
-      if (lastShifts) renderGrid(lastShifts);
     }, 15000);
 
   } catch (err) {
@@ -70,21 +63,32 @@ async function init() {
 }
 
 // ── Render grid ───────────────────────────────────────────
-function renderGrid(shifts) {
-  window._lastShifts = shifts;
-
+function renderGrid(party, shifts) {
+  const times = sortTimes(party.times || []);
   const index = {};
   shifts.forEach(s => { index[`${s.role}_${s.time}`] = s; });
 
+  // Count this user's existing slots per role for the limit indicator
+  const userBarCount  = shifts.filter(s => s.role === 'bar'  && s.person?.toLowerCase() === userName.toLowerCase()).length;
+  const userShotCount = shifts.filter(s => s.role === 'shot' && s.person?.toLowerCase() === userName.toLowerCase()).length;
+
   container.innerHTML = `
-    <div class="shift-grid">
-      <div class="shift-grid__header">Time</div>
-      <div class="shift-grid__header">Bar</div>
-      <div class="shift-grid__header">Shot Shift</div>
-      ${TIMES.map(time => `
-        <div class="shift-grid__time">${time}</div>
-        ${['bar','shot'].map(role => cellHtml(index, role, time)).join('')}
-      `).join('')}
+    <div class="shift-scroll-wrapper">
+      <div class="shift-grid">
+        <div class="shift-grid__header">Time</div>
+        <div class="shift-grid__header">
+          Bar
+          <span class="slot-counter">${userBarCount}/2</span>
+        </div>
+        <div class="shift-grid__header">
+          Shot Shift
+          <span class="slot-counter">${userShotCount}/2</span>
+        </div>
+        ${times.map(time => `
+          <div class="shift-grid__time">${time}</div>
+          ${['bar','shot'].map(role => cellHtml(index, role, time, userBarCount, userShotCount)).join('')}
+        `).join('')}
+      </div>
     </div>
   `;
 
@@ -96,25 +100,29 @@ function renderGrid(shifts) {
       btn.textContent = '…';
       try {
         await claimShift(currentParty.id, role, time, userName);
-      } catch {
+      } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Sign up';
-        alert('That slot was just taken. Please choose another.');
+        if (err.message === 'limit') {
+          alert(`You already have 1 hour (2 slots) in the ${role === 'bar' ? 'Bar' : 'Shot Shift'} — maximum reached.`);
+        } else {
+          alert('That slot was just taken. Please choose another.');
+        }
       }
     });
   });
 }
 
-function cellHtml(index, role, time) {
-  const slot   = index[`${role}_${time}`];
-  const person = slot?.person ?? null;
+function cellHtml(index, role, time, userBarCount, userShotCount) {
+  const slot    = index[`${role}_${time}`];
+  const person  = slot?.person ?? null;
+  const isSelf  = person?.toLowerCase() === userName.toLowerCase();
+  const atLimit = role === 'bar' ? userBarCount >= 2 : userShotCount >= 2;
 
   if (person) {
-    // Taken — highlight if it's the current user
-    const isSelf = person.toLowerCase() === userName.toLowerCase();
     return `
       <div class="shift-grid__cell">
-        <span class="${isSelf ? '' : 'shift-taken'}" style="${isSelf ? 'color:var(--accent);' : ''}">
+        <span style="${isSelf ? 'color:var(--accent);' : 'color:var(--gray300);'}">
           ${escHtml(person)}${isSelf ? ' (you)' : ''}
         </span>
       </div>`;
@@ -122,6 +130,10 @@ function cellHtml(index, role, time) {
 
   if (!registrationOpen) {
     return `<div class="shift-grid__cell"><span class="shift-locked">🔒</span></div>`;
+  }
+
+  if (atLimit) {
+    return `<div class="shift-grid__cell"><span style="color:var(--gray250); font-size:1.2rem;">Max reached</span></div>`;
   }
 
   return `
