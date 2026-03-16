@@ -1,6 +1,7 @@
 import {
   createParty,
   onParties,
+  onParty,
   updateParty,
   setActiveParty,
   deleteParty,
@@ -178,30 +179,39 @@ const modalTitle = document.getElementById('shift-modal-title');
 const modalBody  = document.getElementById('shift-modal-body');
 const modalClose = document.getElementById('shift-modal-close');
 
-let unsubShifts    = null;
+let _unsubModal    = null; // combined unsub for modal listeners
 let currentPartyId = null;
-let currentTimes   = [];
 
 modalClose.addEventListener('click', closeShiftModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeShiftModal(); });
 
 function closeShiftModal() {
   modal.style.display = 'none';
-  if (unsubShifts) { unsubShifts(); unsubShifts = null; }
+  if (_unsubModal) { _unsubModal(); _unsubModal = null; }
   modalBody.innerHTML = '';
   currentPartyId = null;
-  currentTimes   = [];
 }
 
-function openShiftModal(party) {
-  modalTitle.textContent = `${party.name} – Shifts`;
-  currentPartyId = party.id;
-  currentTimes   = sortTimes(party.times || []);
+function openShiftModal(initialParty) {
+  modalTitle.textContent = `${initialParty.name} – Shifts`;
+  currentPartyId = initialParty.id;
   modal.style.display = '';
 
-  unsubShifts = onShifts(party.id, shifts => {
-    renderShiftGrid(party, shifts);
+  // Keep fresh copies updated by their own listeners
+  let latestParty  = { ...initialParty };
+  let latestShifts = [];
+
+  const unsubParty  = onParty(initialParty.id, freshParty => {
+    latestParty = freshParty;
+    renderShiftGrid(latestParty, latestShifts);
   });
+
+  const unsubShifts = onShifts(initialParty.id, shifts => {
+    latestShifts = shifts;
+    renderShiftGrid(latestParty, shifts);
+  });
+
+  _unsubModal = () => { unsubParty(); unsubShifts(); };
 }
 
 function renderShiftGrid(party, shifts) {
@@ -248,7 +258,6 @@ function renderShiftGrid(party, shifts) {
     errEl.style.display = 'none';
     try {
       await addTimeSlot(party.id, formatted);
-      party.times = sortTimes([...(party.times || []), formatted]);
       document.getElementById('new-time-input').value = '';
     } catch (err) {
       errEl.textContent = err.message;
@@ -267,7 +276,6 @@ function renderShiftGrid(party, shifts) {
         if (!confirm(`Slot ${time} has ${[barTaken, shotTaken].filter(Boolean).join(' & ')} signed up. Remove anyway?`)) return;
       }
       await removeTimeSlot(party.id, time);
-      party.times = (party.times || []).filter(t => t !== time);
     });
   });
 

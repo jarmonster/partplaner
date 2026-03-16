@@ -114,6 +114,14 @@ export function onParties(callback) {
   );
 }
 
+/** Listen for changes on a single party document */
+export function onParty(partyId, callback) {
+  return onSnapshot(
+    doc(db, 'parties', partyId),
+    snap => { if (snap.exists()) callback({ id: snap.id, ...snap.data() }); }
+  );
+}
+
 /** Update fields on a party */
 export async function updateParty(partyId, fields) {
   await updateDoc(doc(db, 'parties', partyId), fields);
