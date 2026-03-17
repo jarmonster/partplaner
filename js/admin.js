@@ -11,6 +11,7 @@ import {
   addTimeSlot,
   removeTimeSlot,
   sortTimes,
+  DEFAULT_TIMES,
 } from './firebase.js';
 
 // ── Auth guard ────────────────────────────────────────────
@@ -252,7 +253,7 @@ function openShiftModal(initialParty) {
 }
 
 function renderShiftGrid(party, shifts) {
-  const times = sortTimes(party.times || currentTimes);
+  const times = sortTimes(party.times || DEFAULT_TIMES);
   const index = {};
   shifts.forEach(s => { index[`${s.role}_${s.time}`] = s; });
 
