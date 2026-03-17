@@ -14,14 +14,93 @@
 </head>
 <body>
 
-  <!-- Welcome overlay (admin only) -->
+  <!-- Welcome overlay (admin only) — word-by-word gooey morph -->
   <div id="welcome-overlay" aria-hidden="true">
-    <p id="welcome-text">Welcome my goat</p>
+    <!-- Hidden SVG filter for gooey blob effect -->
+    <svg style="position:absolute;height:0;width:0;" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="welcome-gooey">
+          <feColorMatrix in="SourceGraphic" type="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 255 -140" />
+        </filter>
+      </defs>
+    </svg>
+    <div id="welcome-texts">
+      <span id="welcome-t1"></span>
+      <span id="welcome-t2"></span>
+    </div>
   </div>
   <script>
-    document.getElementById('welcome-overlay').addEventListener('animationend', function () {
-      this.remove();
-    });
+  (function () {
+    const words      = ['Welcome', 'my', 'goat'];
+    const MORPH_TIME = 0.85;   // seconds per word transition
+    const HOLD_TIME  = 0.55;   // seconds each word is held
+    const t1      = document.getElementById('welcome-t1');
+    const t2      = document.getElementById('welcome-t2');
+    const overlay = document.getElementById('welcome-overlay');
+
+    let wordIdx  = 0;
+    let phase    = 'hold';   // 'hold' | 'morph'
+    let timer    = 0;
+    let lastTime = Date.now();
+    let rafId;
+
+    // Show first word
+    t2.textContent = words[0];
+
+    function applyMorph(f) {
+      f = Math.max(1e-3, Math.min(f, 1 - 1e-3));
+      t2.style.filter  = 'blur(' + Math.min(8 / f - 8, 100) + 'px)';
+      t2.style.opacity = (Math.pow(f, 0.4) * 100) + '%';
+      var g = 1 - f;
+      t1.style.filter  = 'blur(' + Math.min(8 / g - 8, 100) + 'px)';
+      t1.style.opacity = (Math.pow(g, 0.4) * 100) + '%';
+    }
+
+    function showT2() {
+      t2.style.filter = ''; t2.style.opacity = '100%';
+      t1.style.filter = ''; t1.style.opacity = '0%';
+    }
+
+    function fadeOut() {
+      cancelAnimationFrame(rafId);
+      showT2();
+      setTimeout(function () {
+        overlay.style.transition = 'opacity 0.8s ease';
+        overlay.style.opacity    = '0';
+        overlay.addEventListener('transitionend', function () { overlay.remove(); }, { once: true });
+      }, 300);
+    }
+
+    function animate() {
+      rafId = requestAnimationFrame(animate);
+      var now = Date.now();
+      timer  += (now - lastTime) / 1000;
+      lastTime = now;
+
+      if (phase === 'hold') {
+        showT2();
+        if (timer >= HOLD_TIME) {
+          timer = 0;
+          if (wordIdx >= words.length - 1) { fadeOut(); return; }
+          // Swap: t1 = current word, t2 = next word, start morph
+          t1.textContent = words[wordIdx];
+          t2.textContent = words[wordIdx + 1];
+          phase = 'morph';
+        }
+      } else {
+        applyMorph(timer / MORPH_TIME);
+        if (timer >= MORPH_TIME) {
+          timer = 0;
+          wordIdx++;
+          phase = 'hold';
+          showT2();
+        }
+      }
+    }
+
+    animate();
+  }());
   </script>
 
   <!-- NAV -->
