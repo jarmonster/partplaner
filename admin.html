@@ -32,21 +32,28 @@
   </div>
   <script>
   (function () {
-    const words      = ['Welcome', 'my', 'goat'];
-    const MORPH_TIME = 0.85;   // seconds per word transition
-    const HOLD_TIME  = 0.55;   // seconds each word is held
-    const t1      = document.getElementById('welcome-t1');
-    const t2      = document.getElementById('welcome-t2');
-    const overlay = document.getElementById('welcome-overlay');
+    var words      = ['Welcome', 'my', 'goat'];
+    var MORPH_TIME = 0.85;
+    var HOLD_TIME  = 0.55;
+    var t1      = document.getElementById('welcome-t1');
+    var t2      = document.getElementById('welcome-t2');
+    var overlay = document.getElementById('welcome-overlay');
 
-    let wordIdx  = 0;
-    let phase    = 'hold';   // 'hold' | 'morph'
-    let timer    = 0;
-    let lastTime = Date.now();
-    let rafId;
+    var wordIdx  = 0;
+    var phase    = 'hold';
+    var timer    = 0;
+    var lastTime = Date.now();
+    var rafId;
 
-    // Show first word
-    t2.textContent = words[0];
+    // Safety net: force-remove overlay after 10s if animation stalls
+    var safetyId = setTimeout(function () {
+      cancelAnimationFrame(rafId);
+      if (overlay.parentNode) overlay.remove();
+    }, 10000);
+
+    // Show first word immediately
+    t2.textContent   = words[0];
+    t2.style.opacity = '100%';
 
     function applyMorph(f) {
       f = Math.max(1e-3, Math.min(f, 1 - 1e-3));
@@ -63,12 +70,19 @@
     }
 
     function fadeOut() {
+      clearTimeout(safetyId);
       cancelAnimationFrame(rafId);
       showT2();
       setTimeout(function () {
         overlay.style.transition = 'opacity 0.8s ease';
         overlay.style.opacity    = '0';
-        overlay.addEventListener('transitionend', function () { overlay.remove(); }, { once: true });
+        // transitionend may not fire if browser skips transition
+        overlay.addEventListener('transitionend', function () {
+          if (overlay.parentNode) overlay.remove();
+        }, { once: true });
+        setTimeout(function () {
+          if (overlay.parentNode) overlay.remove();
+        }, 1000);
       }, 300);
     }
 
@@ -83,10 +97,12 @@
         if (timer >= HOLD_TIME) {
           timer = 0;
           if (wordIdx >= words.length - 1) { fadeOut(); return; }
-          // Swap: t1 = current word, t2 = next word, start morph
           t1.textContent = words[wordIdx];
           t2.textContent = words[wordIdx + 1];
           phase = 'morph';
+          // Override showT2 in this same frame — prevents the one-frame flash
+          // where next word briefly appears at full opacity before blur kicks in
+          applyMorph(1e-3);
         }
       } else {
         applyMorph(timer / MORPH_TIME);
