@@ -153,6 +153,33 @@ function buildPartyCard(party) {
         <button class="btn btn-danger btn-sm js-delete">Delete</button>
       </div>
     </div>
+
+    <!-- Revenue data -->
+    <div style="border-top:1px solid var(--border); padding-top:1.6rem;">
+      <p class="section__title" style="margin-bottom:1.2rem;">Revenue</p>
+      <div class="party-revenue-grid">
+        <div class="form-group">
+          <label class="label" style="color:#22c55e;">Max expected (€)</label>
+          <input type="number" min="0" step="0.01" class="input rev-input"
+            data-field="maxRevenue" value="${party.maxRevenue ?? ''}" placeholder="—" />
+        </div>
+        <div class="form-group">
+          <label class="label" style="color:#ef4444;">Min expected (€)</label>
+          <input type="number" min="0" step="0.01" class="input rev-input"
+            data-field="minRevenue" value="${party.minRevenue ?? ''}" placeholder="—" />
+        </div>
+        <div class="form-group">
+          <label class="label" style="color:#3b82f6;">Actual revenue (€)</label>
+          <input type="number" min="0" step="0.01" class="input rev-input"
+            data-field="actualRevenue" value="${party.actualRevenue ?? ''}" placeholder="—" />
+        </div>
+        <div class="form-group">
+          <label class="label" style="color:var(--gray300);">Inventory value (€)</label>
+          <input type="number" min="0" step="0.01" class="input rev-input"
+            data-field="inventoryValue" value="${party.inventoryValue ?? ''}" placeholder="—" />
+        </div>
+      </div>
+    </div>
   `;
 
   card.querySelectorAll('.toggle__input').forEach(toggle => {
@@ -163,6 +190,14 @@ function buildPartyCard(party) {
       } else {
         await updateParty(party.id, { [field]: toggle.checked });
       }
+    });
+  });
+
+  // Revenue inputs — save on change (fires on blur when value changed)
+  card.querySelectorAll('.rev-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const val = input.value.trim() === '' ? null : parseFloat(input.value);
+      await updateParty(party.id, { [input.dataset.field]: val });
     });
   });
 

@@ -1,196 +1,146 @@
-import { onParties, updateParty } from './firebase.js';
+import { onParties } from './firebase.js';
 
 // ── Chart.js global defaults (dark theme) ────────────────
-Chart.defaults.color          = '#606060';
-Chart.defaults.borderColor    = 'rgba(255,255,255,0.08)';
-Chart.defaults.font.family    = 'Helvetica, Arial, sans-serif';
-Chart.defaults.font.size      = 12;
+Chart.defaults.color       = '#606060';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+Chart.defaults.font.family = 'Helvetica, Arial, sans-serif';
+Chart.defaults.font.size   = 12;
 
-// ── Dataset colour palette ────────────────────────────────
-const COLORS = {
-  max:       '#584dff',
-  min:       'rgba(88,77,255,0.4)',
-  actual:    '#22c55e',
-  inventory: '#f59e0b',
+// ── Colour palette ────────────────────────────────────────
+const C = {
+  max:       '#22c55e',                    // green
+  min:       '#ef4444',                    // red
+  actual:    '#3b82f6',                    // blue
+  effective: '#584dff',                    // purple (dots only)
+  minFill:   'rgba(239, 68, 68, 0.08)',    // red area under min
 };
 
 // ── State ─────────────────────────────────────────────────
 let chartInstance = null;
-let latestParties = [];
 
 // ── Real-time subscription ────────────────────────────────
 onParties(parties => {
-  // Sort chronologically by date
-  latestParties = [...parties].sort((a, b) => {
+  const sorted = [...parties].sort((a, b) => {
     if (!a.date) return 1;
     if (!b.date) return -1;
     return a.date.localeCompare(b.date);
   });
-  renderTable(latestParties);
-  renderChart(latestParties);
+  renderChart(sorted);
 });
-
-// ── Input table ───────────────────────────────────────────
-function renderTable(parties) {
-  const wrap = document.getElementById('analytics-table-wrap');
-  if (!parties.length) {
-    wrap.innerHTML = '<div class="empty-state">No parties yet.</div>';
-    return;
-  }
-
-  wrap.innerHTML = `
-    <table class="analytics-table">
-      <thead>
-        <tr>
-          <th>Party</th>
-          <th>Date</th>
-          <th style="color:${COLORS.min};">Min expected (€)</th>
-          <th style="color:${COLORS.max};">Max expected (€)</th>
-          <th style="color:${COLORS.actual};">Actual revenue (€)</th>
-          <th style="color:${COLORS.inventory};">Inventory value (€)</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${parties.map(p => `
-          <tr data-id="${p.id}">
-            <td>${escHtml(p.name)}</td>
-            <td style="color:var(--gray300);">${p.date ? fmtDate(p.date) : '—'}</td>
-            <td><input class="input an-input" type="number" min="0" step="0.01"
-              data-field="minRevenue" value="${p.minRevenue ?? ''}" placeholder="—" /></td>
-            <td><input class="input an-input" type="number" min="0" step="0.01"
-              data-field="maxRevenue" value="${p.maxRevenue ?? ''}" placeholder="—" /></td>
-            <td><input class="input an-input" type="number" min="0" step="0.01"
-              data-field="actualRevenue" value="${p.actualRevenue ?? ''}" placeholder="—" /></td>
-            <td><input class="input an-input" type="number" min="0" step="0.01"
-              data-field="inventoryValue" value="${p.inventoryValue ?? ''}" placeholder="—" /></td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-
-  // Save on blur — debounced per cell
-  wrap.querySelectorAll('.an-input').forEach(input => {
-    input.addEventListener('change', async () => {
-      const row     = input.closest('tr');
-      const partyId = row.dataset.id;
-      const field   = input.dataset.field;
-      const val     = input.value.trim() === '' ? null : parseFloat(input.value);
-      await updateParty(partyId, { [field]: val });
-    });
-  });
-}
 
 // ── Chart ─────────────────────────────────────────────────
 function renderChart(parties) {
   const card = document.getElementById('analytics-chart-card');
 
-  // Only show chart when at least one party has any analytics data
   const hasData = parties.some(p =>
     p.minRevenue != null || p.maxRevenue != null ||
     p.actualRevenue != null || p.inventoryValue != null
   );
 
+  const emptyEl = document.getElementById('analytics-empty');
   if (!hasData) {
-    card.style.display = 'none';
+    card.style.display  = 'none';
+    if (emptyEl) emptyEl.style.display = '';
     return;
   }
   card.style.display = '';
+  if (emptyEl) emptyEl.style.display = 'none';
 
   const labels = parties.map(p =>
-    p.date ? fmtDate(p.date) : escHtml(p.name)
+    p.date
+      ? new Date(p.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : p.name
   );
 
   const datasets = [
+    // Max expected — green line
     {
       label: 'Max expected',
       data: parties.map(p => p.maxRevenue ?? null),
-      borderColor: COLORS.max,
-      backgroundColor: COLORS.max,
-      pointBackgroundColor: COLORS.max,
+      borderColor: C.max,
+      backgroundColor: C.max,
+      pointBackgroundColor: C.max,
       borderWidth: 2,
       pointRadius: 5,
       pointHoverRadius: 7,
       tension: 0.3,
       spanGaps: false,
     },
+    // Min expected — red line + red fill to zero
     {
       label: 'Min expected',
       data: parties.map(p => p.minRevenue ?? null),
-      borderColor: COLORS.min,
-      backgroundColor: COLORS.min,
-      pointBackgroundColor: COLORS.min,
+      borderColor: C.min,
+      backgroundColor: C.minFill,
+      pointBackgroundColor: C.min,
       borderWidth: 2,
-      borderDash: [6, 3],
       pointRadius: 5,
       pointHoverRadius: 7,
       tension: 0.3,
+      fill: 'origin',
       spanGaps: false,
     },
+    // Actual revenue — blue line
     {
       label: 'Actual revenue',
       data: parties.map(p => p.actualRevenue ?? null),
-      borderColor: COLORS.actual,
-      backgroundColor: COLORS.actual,
-      pointBackgroundColor: COLORS.actual,
+      borderColor: C.actual,
+      backgroundColor: C.actual,
+      pointBackgroundColor: C.actual,
       borderWidth: 2,
       pointRadius: 5,
       pointHoverRadius: 7,
       tension: 0.3,
       spanGaps: false,
     },
+    // Effective revenue (actual + inventory) — purple dots only
     {
-      label: 'Inventory value',
-      data: parties.map(p => p.inventoryValue ?? null),
-      borderColor: COLORS.inventory,
-      backgroundColor: COLORS.inventory,
-      pointBackgroundColor: COLORS.inventory,
-      borderWidth: 2,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      tension: 0.3,
+      label: 'Effective revenue',
+      data: parties.map(p =>
+        p.actualRevenue != null && p.inventoryValue != null
+          ? p.actualRevenue + p.inventoryValue
+          : null
+      ),
+      borderColor: C.effective,
+      backgroundColor: C.effective,
+      pointBackgroundColor: C.effective,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      showLine: false,
       spanGaps: false,
     },
   ];
 
-  const config = {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false }, // using custom legend in HTML
-        tooltip: {
-          backgroundColor: '#1a1a1a',
-          borderColor: 'rgba(255,255,255,0.08)',
-          borderWidth: 1,
-          titleColor: '#fff',
-          bodyColor: '#606060',
-          padding: 12,
-          callbacks: {
-            label: ctx => {
-              const v = ctx.parsed.y;
-              return v == null ? null : ` ${ctx.dataset.label}: € ${v.toFixed(2)}`;
-            },
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a1a1a',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleColor: '#fff',
+        bodyColor: '#606060',
+        padding: 12,
+        callbacks: {
+          label: ctx => {
+            const v = ctx.parsed.y;
+            return v == null ? null : ` ${ctx.dataset.label}: € ${v.toFixed(2)}`;
           },
         },
       },
-      scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.06)' },
-          ticks: { color: '#606060', font: { size: 12 } },
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.06)' },
-          ticks: {
-            color: '#606060',
-            font: { size: 12 },
-            callback: v => `€ ${v}`,
-          },
-          beginAtZero: true,
-        },
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { color: '#606060', font: { size: 12 } },
+      },
+      y: {
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { color: '#606060', font: { size: 12 }, callback: v => `€ ${v}` },
+        beginAtZero: true,
       },
     },
   };
@@ -201,19 +151,6 @@ function renderChart(parties) {
     chartInstance.update();
   } else {
     const ctx = document.getElementById('analytics-chart').getContext('2d');
-    chartInstance = new Chart(ctx, config);
+    chartInstance = new Chart(ctx, { type: 'line', data: { labels, datasets }, options });
   }
-}
-
-// ── Utilities ─────────────────────────────────────────────
-function fmtDate(iso) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
-}
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

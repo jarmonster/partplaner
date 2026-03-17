@@ -577,6 +577,27 @@ input, select, textarea {
 }
 
 /* ============================================================
+   PARTY REVENUE GRID (inside party cards)
+   ============================================================ */
+.party-revenue-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .party-revenue-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .party-revenue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
    ANALYTICS TABLE
    ============================================================ */
 .analytics-table {

@@ -159,34 +159,27 @@
   <div id="tab-analytics" class="container" style="display:none;">
     <div class="page-header">
       <h1 class="page-header__title">Analytics</h1>
-      <p class="page-header__sub">Compare expected vs actual revenue per party</p>
+      <p class="page-header__sub">Revenue per party — enter data in each party card</p>
     </div>
 
-    <div class="flex flex-col gap-24" style="padding-bottom:4rem;">
-
-      <!-- Input table -->
-      <div class="card" style="overflow-x:auto;">
-        <p class="section__title" style="margin-bottom:2rem;">Party Revenue Data</p>
-        <div id="analytics-table-wrap">
-          <div class="empty-state">No parties yet.</div>
-        </div>
-      </div>
-
-      <!-- Chart -->
+    <div style="padding-bottom:4rem;">
       <div class="card" id="analytics-chart-card" style="display:none;">
         <p class="section__title" style="margin-bottom:2rem;">Revenue Overview</p>
-        <div style="position:relative; height:36rem;">
+        <div style="position:relative; height:40rem;">
           <canvas id="analytics-chart"></canvas>
         </div>
         <!-- Legend -->
         <div class="flex gap-24" style="margin-top:2rem; flex-wrap:wrap;">
-          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#584dff;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Max expected</span></div>
-          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:rgba(88,77,255,0.35);display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Min expected</span></div>
-          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#22c55e;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Actual revenue</span></div>
-          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#f59e0b;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Inventory value</span></div>
+          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#22c55e;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Max expected</span></div>
+          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#ef4444;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Min expected (+ red area)</span></div>
+          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#3b82f6;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Actual revenue</span></div>
+          <div class="flex gap-8 items-center"><span style="width:1.2rem;height:1.2rem;border-radius:50%;background:#584dff;display:inline-block;"></span><span style="font-size:1.3rem;color:var(--gray300);">Effective (actual + inventory)</span></div>
         </div>
       </div>
 
+      <div id="analytics-empty" class="empty-state" style="display:none;">
+        No revenue data yet — fill in the fields on the party cards.
+      </div>
     </div>
   </div>
 
