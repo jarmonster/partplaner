@@ -20,16 +20,18 @@ if (!userName || userName.toLowerCase() !== 'jarmonster') {
 }
 
 // ── Tab switching ─────────────────────────────────────────
-const tabs     = document.querySelectorAll('.nav__tab');
-const tabParty = document.getElementById('tab-parties');
-const tabCalc  = document.getElementById('tab-calculator');
+const tabs         = document.querySelectorAll('.nav__tab');
+const tabParty     = document.getElementById('tab-parties');
+const tabCalc      = document.getElementById('tab-calculator');
+const tabAnalytics = document.getElementById('tab-analytics');
 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     tabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    tabParty.style.display = tab.dataset.tab === 'parties'    ? '' : 'none';
-    tabCalc.style.display  = tab.dataset.tab === 'calculator' ? '' : 'none';
+    tabParty.style.display     = tab.dataset.tab === 'parties'    ? '' : 'none';
+    tabCalc.style.display      = tab.dataset.tab === 'calculator' ? '' : 'none';
+    tabAnalytics.style.display = tab.dataset.tab === 'analytics'  ? '' : 'none';
   });
 });
 

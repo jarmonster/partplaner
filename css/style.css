@@ -577,6 +577,42 @@ input, select, textarea {
 }
 
 /* ============================================================
+   ANALYTICS TABLE
+   ============================================================ */
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.4rem;
+  min-width: 72rem;
+}
+
+.analytics-table th {
+  text-align: left;
+  padding: 1rem 1.4rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.analytics-table td {
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.analytics-table tr:last-child td {
+  border-bottom: none;
+}
+
+.analytics-table .an-input {
+  padding: 0.6rem 1rem;
+  font-size: 1.3rem;
+  width: 12rem;
+}
+
+/* ============================================================
    SLOT COUNTER (shown in shift grid header)
    ============================================================ */
 .slot-counter {
