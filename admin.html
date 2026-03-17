@@ -14,6 +14,16 @@
 </head>
 <body>
 
+  <!-- Welcome overlay (admin only) -->
+  <div id="welcome-overlay" aria-hidden="true">
+    <p id="welcome-text">Welcome my goat</p>
+  </div>
+  <script>
+    document.getElementById('welcome-overlay').addEventListener('animationend', function () {
+      this.remove();
+    });
+  </script>
+
   <!-- NAV -->
   <nav class="nav">
     <span class="nav__logo">Partyplaner</span>
