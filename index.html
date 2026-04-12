@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Partyplaner</title>
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="modulepreload" href="js/firebase.js" />
+  <link rel="modulepreload" href="js/supabase.js" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -37,7 +36,7 @@
   </div>
 
   <script type="module">
-    import { getActiveParty } from './js/firebase.js';
+    import { getActiveParty } from './js/supabase.js';
 
     const ADMIN_NAME = 'jarmonster';
 
@@ -74,7 +73,7 @@
         sessionStorage.setItem('pp_party_id', party.id);
         window.location.href = 'shifts.html';
       } catch (err) {
-        showError('Could not connect. Make sure Firebase is configured.');
+        showError('Could not connect. Check your Supabase configuration.');
         console.error(err);
       }
     });

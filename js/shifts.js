@@ -1,4 +1,4 @@
-import { getActiveParty, onShifts, claimShift, sortTimes } from './firebase.js';
+import { getActiveParty, onShifts, claimShift, sortTimes } from './supabase.js';
 
 // ── Auth / session ────────────────────────────────────────
 const userName = sessionStorage.getItem('pp_name');
@@ -57,7 +57,7 @@ async function init() {
 
   } catch (err) {
     titleEl.textContent = 'Connection error';
-    dateEl.textContent  = 'Check your Firebase configuration.';
+    dateEl.textContent  = 'Check your Supabase configuration.';
     console.error(err);
   }
 }

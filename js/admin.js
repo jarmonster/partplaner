@@ -12,7 +12,7 @@ import {
   removeTimeSlot,
   sortTimes,
   DEFAULT_TIMES,
-} from './firebase.js';
+} from './supabase.js';
 
 // ── Auth guard ────────────────────────────────────────────
 const userName = sessionStorage.getItem('pp_name');
@@ -80,7 +80,7 @@ savePartyBtn.addEventListener('click', async () => {
     partyNameInput.value = '';
     partyDateInput.value = '';
   } catch (err) {
-    partyFormError.textContent = 'Failed to save. Check Firebase config.';
+    partyFormError.textContent = 'Failed to save. Check Supabase config.';
     partyFormError.style.display = '';
     console.error(err);
   } finally {

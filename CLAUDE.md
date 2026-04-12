@@ -25,3 +25,7 @@ After completing any coding task, run the following review loop **twice** before
 - Minimal changes — only touch what's necessary
 - No over-engineering; simplest solution that works
 - Fix root causes, not symptoms
+
+## Instructions via `#` prefix
+- When the user sends a message starting with `#`, treat it as a project-level instruction and append it to this file (local CLAUDE.md), not the global one.
+- Use comments sparingly. Only comment complex code.

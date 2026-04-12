@@ -1,4 +1,4 @@
-import { onParties } from './firebase.js';
+import { onParties } from './supabase.js';
 
 // ── Chart.js global defaults (dark theme) ────────────────
 Chart.defaults.color       = '#606060';
